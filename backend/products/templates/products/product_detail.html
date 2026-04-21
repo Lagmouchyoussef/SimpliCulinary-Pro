@@ -1,0 +1,123 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - SimpliCulinary{% endblock %}
+
+{% block content %}
+<style>
+    .detail-card {
+        background: white;
+        border-radius: 2rem;
+        overflow: hidden;
+        border: none;
+    }
+    .product-image-large {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+    }
+    .price-tag {
+        font-size: 2.5rem;
+        color: var(--bs-primary);
+        font-weight: 800;
+    }
+    .stock-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+    }
+</style>
+
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-5">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products_list' %}">Products</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="card detail-card shadow-lg">
+        <div class="row g-0">
+            <div class="col-lg-6">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="product-image-large" alt="{{ product.name }}">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
+                        <i class="fas fa-image fa-10x text-muted opacity-10"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 p-5 d-flex flex-column">
+                <div class="mb-auto">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 mb-2">{{ product.category.name }}</span>
+                            <h1 class="fw-bold display-5">{{ product.name }}</h1>
+                        </div>
+                        <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if product.stock > 0 %}text-success{% else %}text-danger{% endif %} stock-badge">
+                            <i class="fas {% if product.stock > 0 %}fa-check-circle{% else %}fa-times-circle{% endif %} me-2"></i>
+                            {% if product.stock > 0 %}In Stock ({{ product.stock }}){% else %}Out of Stock{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="price-tag mb-4">
+                        {{ product.price }} <span class="h3 text-muted fw-normal">MAD</span>
+                    </div>
+
+                    <p class="text-muted lead mb-5">
+                        {{ product.description|default:"This premium culinary tool is designed for precision and durability. A must-have for any modern kitchen looking to achieve professional results." }}
+                    </p>
+                </div>
+
+                <div class="bg-light p-4 rounded-4">
+                    <form method="post" action="{% url 'add_cart' product.id %}" class="row g-3 align-items-center">
+                        {% csrf_token %}
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Quantity</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary rounded-start-pill" type="button" onclick="this.parentNode.querySelector('input').stepDown()">-</button>
+                                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control text-center border-secondary">
+                                <button class="btn btn-outline-secondary rounded-end-pill" type="button" onclick="this.parentNode.querySelector('input').stepUp()">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm py-3 fw-bold" {% if product.stock <= 0 %}disabled{% endif %}>
+                                <i class="fas fa-cart-plus me-2"></i> Add to Cart
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-5 mt-4">
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                <h5 class="fw-bold">Official Warranty</h5>
+                <p class="text-muted small mb-0">1-year manufacturer warranty included with every purchase.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                <i class="fas fa-undo fa-3x text-success mb-3"></i>
+                <h5 class="fw-bold">Free Returns</h5>
+                <p class="text-muted small mb-0">Not satisfied? Return your item within 30 days for a full refund.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                <i class="fas fa-lock fa-3x text-info mb-3"></i>
+                <h5 class="fw-bold">Secure Payment</h5>
+                <p class="text-muted small mb-0">Your transactions are protected by industry-leading encryption.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Shipping - SimpliCulinary{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>ORDER SHIPPING</h1>
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary">Place Order</button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item">
+                        <h3>ORDER SUMMARY</h3>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col">Subtotal - products:</div>
+                            <div class="col"><strong>{{ cart.total }} MAD</strong></div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col">Shipping:</div>
+                            <div class="col"><strong>FREE</strong></div>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="row">
+                            <div class="col"><h3>TOTAL:</h3></div>
+                            <div class="col"><h3>{{ cart.total }} MAD</h3></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

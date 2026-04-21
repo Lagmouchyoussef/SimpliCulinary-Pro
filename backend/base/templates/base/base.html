@@ -1,0 +1,175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SimpliCulinary{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'base/css/bootstrap.min.css' %}">
+    <!-- FontAwesome CSS (CDN for stability) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --bs-primary: #0061f2;
+            --bs-primary-rgb: 0, 97, 242;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .navbar {
+            padding: 1.25rem 0;
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--bs-primary) !important;
+            letter-spacing: -0.5px;
+        }
+        .nav-link {
+            font-weight: 600;
+            color: #475569 !important;
+            margin: 0 0.5rem;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--bs-primary) !important;
+        }
+        .cart-badge {
+            font-size: 0.7rem;
+            padding: 0.35em 0.65em;
+        }
+        footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 4rem 0 2rem;
+        }
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .footer-link:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <i class="fas fa-utensils me-2"></i> SimpliCulinary
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'products_list' %}active{% endif %}" href="{% url 'products_list' %}">Our Products</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3">
+                        <a class="nav-link position-relative p-2" href="{% url 'cart_detail' %}">
+                            <i class="fas fa-shopping-bag fa-lg"></i>
+                            <span id="cart-counter" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary cart-badge animate__animated animate__pulse animate__infinite">
+                                {{ cart_total_items|default:0 }}
+                            </span>
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle btn btn-light rounded-pill px-4 shadow-sm" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-2"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 mt-3">
+                                <li><a class="dropdown-item py-2" href="#"><i class="fas fa-list me-2"></i> My Orders</a></li>
+                                <li><hr class="dropdown-divider opacity-50"></li>
+                                <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-outline-primary rounded-pill px-4 me-2" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary rounded-pill px-4 text-white shadow-sm" href="{% url 'signup' %}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="animate__animated animate__fadeIn">
+        <div class="container mt-4">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <div class="col-lg-4">
+                    <h5 class="text-white fw-bold mb-4">SimpliCulinary</h5>
+                    <p>Elevating your home cooking experience with professional-grade equipment and expert guidance. Join the revolution of home chefs.</p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="#" class="footer-link"><i class="fab fa-instagram fa-xl"></i></a>
+                        <a href="#" class="footer-link"><i class="fab fa-facebook fa-xl"></i></a>
+                        <a href="#" class="footer-link"><i class="fab fa-twitter fa-xl"></i></a>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-2 ms-lg-auto">
+                    <h6 class="text-white fw-bold mb-4">Shop</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'products_list' %}" class="footer-link">All Products</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">New Arrivals</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Special Offers</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="text-white fw-bold mb-4">Support</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="footer-link">Help Center</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Shipping Policy</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Returns & Refunds</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="opacity-10 mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 small">&copy; 2026 SimpliCulinary. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
+                    <img src="https://img.icons8.com/color/48/000000/paypal.png" height="30" class="me-3 opacity-75">
+                    <img src="https://img.icons8.com/color/48/000000/visa.png" height="30" class="me-3 opacity-75">
+                    <img src="https://img.icons8.com/color/48/000000/mastercard.png" height="30" class="opacity-75">
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="{% static 'base/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>
