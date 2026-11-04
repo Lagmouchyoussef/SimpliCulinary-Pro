@@ -16,6 +16,8 @@
   <img alt="React" src="https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB">
   <img alt="Bootstrap" src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
+  <a href="DISCLAIMER.md"><img alt="Demo project" src="https://img.shields.io/badge/Purpose-Demo_only-orange"></a>
 </p>
 
 <p align="center">
@@ -38,6 +40,7 @@
 - [Design system and brand](#design-system-and-brand)
 - [Roadmap](#roadmap)
 - [Credits](#credits)
+- [License and disclaimer](#license-and-disclaimer)
 
 ---
 
@@ -273,6 +276,18 @@ SimpliCulinary-Pro/
 
 - Demo product photos come from Wikimedia Commons under Creative Commons licences; see [`backend/sample_images/CREDITS.md`](backend/sample_images/CREDITS.md). Replace them with official product images in production.
 - Icons by [Font Awesome](https://fontawesome.com), typography by [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans).
+
+---
+
+## License and disclaimer
+
+This project is released under the [MIT License](LICENSE).
+
+> **Demonstration project.** SimpliCulinary Pro was built for learning and portfolio purposes only. Payments are simulated and all products and customers are fictional.
+>
+> **Lawful use only.** If someone uses this project for anything illegal, fraudulent or harmful, they are solely responsible and may be pursued by the law. **The author is not responsible** for any misuse.
+>
+> Read the full [DISCLAIMER](DISCLAIMER.md).
 
 ---
 
