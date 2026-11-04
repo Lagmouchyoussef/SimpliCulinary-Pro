@@ -1,90 +1,89 @@
-import React, { useState, useEffect } from 'react'
-import { Row, Col, Container } from 'react-bootstrap'
+import React, { useState, useEffect, useMemo } from 'react'
+import { Row, Col } from 'react-bootstrap'
 import axios from 'axios'
 import Product from '../components/Product'
+import { API_URL } from '../config'
+
+const SORTS = {
+  newest: { label: 'Newest', fn: (a, b) => b.id - a.id },
+  price_asc: { label: 'Price: low to high', fn: (a, b) => a.price - b.price },
+  price_desc: { label: 'Price: high to low', fn: (a, b) => b.price - a.price },
+  name: { label: 'Name', fn: (a, b) => a.name.localeCompare(b.name) },
+}
 
 function ListProduits() {
-    const [products, setProducts] = useState([])
-    const [filteredProducts, setFilteredProducts] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [category, setCategory] = useState('All')
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState('All')
+  const [sort, setSort] = useState('newest')
 
-    useEffect(() => {
-        async function fetchProducts() {
-            try {
-                const { data } = await axios.get('http://127.0.0.1:8001/products/api/')
-                setProducts(data)
-                setFilteredProducts(data)
-            } catch (error) {
-                console.error("Error fetching products", error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchProducts()
-    }, [])
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data } = await axios.get(`${API_URL}/products/api/`)
+        setProducts(data)
+      } catch (error) {
+        console.error('Error fetching products', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
 
-    useEffect(() => {
-        if (category === 'All') {
-            setFilteredProducts(products)
-        } else {
-            setFilteredProducts(products.filter(p => p.category_name === category))
-        }
-    }, [category, products])
+  const categories = useMemo(
+    () => ['All', ...new Set(products.map((p) => p.category_name).filter(Boolean))],
+    [products]
+  )
 
-    return (
-        <Container className="py-4">
-            {/* Header Section */}
-            <div className="text-center mb-5">
-                <h6 className="text-primary text-uppercase fw-bold mb-2" style={{ letterSpacing: '2px' }}>Culinary Exclusivity</h6>
-                <h1 className="display-4 fw-bold mb-4">Our Precision Collection</h1>
-                <div className="d-flex justify-content-center gap-2 mb-4">
-                    {['All', 'Appliances', 'Utensils', 'Accessories'].map(cat => (
-                        <span 
-                            key={cat}
-                            onClick={() => setCategory(cat)}
-                            className={`badge border px-4 py-2 rounded-pill cursor-pointer transition-all ${category === cat ? 'bg-primary text-white shadow' : 'bg-light text-muted'}`}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            {cat}
-                        </span>
-                    ))}
-                </div>
-                <p className="text-muted mx-auto" style={{ maxWidth: '700px' }}>
-                    Each piece is selected for its performance and durability, ensuring an unparalleled gastronomic experience.
-                </p>
-            </div>
+  const visible = useMemo(() => {
+    const list = category === 'All' ? products : products.filter((p) => p.category_name === category)
+    return [...list].sort(SORTS[sort].fn)
+  }, [products, category, sort])
 
-            {/* Results Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <h5 className="mb-0 fw-bold">{filteredProducts.length} Products found</h5>
-                <div className="d-flex gap-2 align-items-center">
-                    <span className="small text-muted">Sort by:</span>
-                    <select className="form-select form-select-sm border-0 bg-light rounded-pill px-3">
-                        <option>Newest</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                    </select>
-                </div>
-            </div>
+  return (
+    <>
+      <header className="sc-page-head">
+        <span className="sc-eyebrow">The collection</span>
+        <h1>Precision tools for <em>serious</em> home chefs</h1>
+        <p>Each piece is selected for performance and durability, so every meal comes out exactly as planned.</p>
+      </header>
 
-            {loading ? (
-                <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            ) : (
-                <Row className="g-4">
-                    {filteredProducts.map(product => (
-                        <Col key={product.id} sm={12} md={6} lg={4} xl={3} className="d-flex align-items-stretch">
-                            <Product product={product} />
-                        </Col>
-                    ))}
-                </Row>
-            )}
-        </Container>
-    )
+      <div className="sc-toolbar">
+        <div className="sc-filters" role="group" aria-label="Filter by category">
+          {categories.map((cat) => (
+            <button key={cat} type="button" onClick={() => setCategory(cat)} className={`sc-pill ${category === cat ? 'active' : ''}`}>
+              {cat}
+            </button>
+          ))}
+        </div>
+        <div className="d-flex align-items-center gap-3">
+          <span className="sc-result-count">{visible.length} <span>product{visible.length === 1 ? '' : 's'}</span></span>
+          <label htmlFor="sort" className="form-label mb-0 text-muted">Sort by</label>
+          <select id="sort" className="form-select form-select-sm rounded-pill w-auto" value={sort} onChange={(e) => setSort(e.target.value)}>
+            {Object.entries(SORTS).map(([key, s]) => <option key={key} value={key}>{s.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-5"><div className="sc-spinner" role="status"><span className="visually-hidden">Loading…</span></div></div>
+      ) : visible.length === 0 ? (
+        <div className="sc-card sc-empty">
+          <div className="sc-empty-icon"><i className="fas fa-magnifying-glass"></i></div>
+          <h3>No products found</h3>
+          <p className="text-muted mb-4">Try another category.</p>
+          <button className="btn btn-primary px-4" onClick={() => setCategory('All')}>View all products</button>
+        </div>
+      ) : (
+        <Row className="g-4">
+          {visible.map((product) => (
+            <Col key={product.id} md={6} lg={4}><Product product={product} /></Col>
+          ))}
+        </Row>
+      )}
+    </>
+  )
 }
 
 export default ListProduits

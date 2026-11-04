@@ -1,155 +1,126 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Row, Col, ListGroup, Image, Form, Button, Card } from 'react-bootstrap'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Row, Col } from 'react-bootstrap'
 import axios from 'axios'
 import { useCart } from '../context/CartContext'
+import { API_URL, imageUrl } from '../config'
+import Toast from '../components/Toast'
+import PaymentLogos from '../components/PaymentLogos'
 
 function CartScreen() {
   const [cart, setCart] = useState({ items: [], total: 0 })
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState(null)
   const { updateCartCount } = useCart()
-
-  const [checkoutSuccess, setCheckoutSuccess] = useState(false)
+  const navigate = useNavigate()
+  const isLoggedIn = !!localStorage.getItem('userInfo')
+  const closeToast = useCallback(() => setToast(null), [])
 
   const fetchCart = async () => {
     try {
-      const { data } = await axios.get('http://127.0.0.1:8001/cart/api/')
+      const { data } = await axios.get(`${API_URL}/cart/api/`)
       setCart(data)
     } catch (error) {
-      console.error("Error fetching cart:", error)
+      console.error('Error fetching cart:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchCart()
-  }, [])
+  useEffect(() => { fetchCart() }, [])
 
   const removeFromCartHandler = async (id) => {
     try {
-        await axios.delete(`http://127.0.0.1:8001/cart/api/item/${id}/`)
-        // Reload cart locally
-        fetchCart()
-        // Update header counter
-        updateCartCount()
+      await axios.delete(`${API_URL}/cart/api/item/${id}/`)
+      fetchCart()
+      updateCartCount()
     } catch (error) {
-        console.error("Error deleting:", error)
-        alert("Could not delete this item.")
+      console.error('Error deleting:', error)
+      setToast({ type: 'error', title: 'Something went wrong', message: 'Could not remove this item.' })
     }
   }
 
-  const checkoutHandler = async () => {
-    try {
-        setLoading(true)
-        await axios.post('http://127.0.0.1:8001/orders/api/create/', {
-            shipping_address: "React Delivery Address"
-        })
-        setCheckoutSuccess(true)
-        setCart({ items: [], total: 0 })
-        updateCartCount()
-    } catch (error) {
-        console.error("Payment error:", error)
-        alert("An error occurred during payment.")
-    } finally {
-        setLoading(false)
-    }
+  const checkoutHandler = () => {
+    // Guests must log in or create an account first; the cart is kept and merged on login
+    navigate(isLoggedIn ? '/checkout' : `/login?redirect=${encodeURIComponent('/checkout')}`)
   }
+
+  const isEmpty = !cart.items || cart.items.length === 0
 
   return (
-    <Row>
-      <Col md={8}>
-        <h1 className="mb-4">My Cart</h1>
-        {checkoutSuccess ? (
-            <div className="alert alert-success py-5 text-center rounded-4 shadow-sm border-0">
-                <i className="fas fa-check-circle fa-3x mb-3 text-success"></i>
-                <h3>Order Placed!</h3>
-                <p className="text-muted">Thank you for your trust. Your order is being prepared.</p>
-                <Link to="/products" className="btn btn-success mt-3 px-4 rounded-pill">Continue Shopping</Link>
-            </div>
-        ) : loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        ) : !cart.items || cart.items.length === 0 ? (
-          <div className="alert alert-info py-5 text-center rounded-4 shadow-sm border-0">
-            <i className="fas fa-shopping-basket fa-3x mb-3 text-muted opacity-50"></i>
-            <h3>Your cart is empty</h3>
-            <p className="text-muted">It seems you haven't added any delicacies yet!</p>
-            <Link to="/products" className="btn btn-primary mt-3 px-4 rounded-pill">Continue Shopping</Link>
-          </div>
-        ) : (
-          <ListGroup variant="flush">
-            {cart.items.map(item => (
-              <ListGroup.Item key={item.id} className="border-0 shadow-sm rounded-4 mb-3 p-3 bg-white">
-                <Row className="align-items-center">
-                  <Col md={2}>
-                    <Image 
-                      src={item.product_image ? `http://127.0.0.1:8001${item.product_image}` : 'https://via.placeholder.com/100'} 
-                      alt={item.product_name} 
-                      fluid 
-                      rounded 
-                      style={{ height: '80px', width: '80px', objectFit: 'cover' }}
-                    />
-                  </Col>
-                  <Col md={3}>
-                    <Link to={`/products/${item.product}`} className="text-dark fw-bold text-decoration-none">
-                      {item.product_name}
-                    </Link>
-                  </Col>
-                  <Col md={2} className="text-primary fw-bold">
-                    {item.product_price} MAD
-                  </Col>
-                  <Col md={3}>
-                    <div className="d-flex align-items-center">
-                        <span className="me-2 text-muted">Qty: {item.quantity}</span>
-                    </div>
-                  </Col>
-                  <Col md={2} className="text-end">
-                    <Button 
-                        type="button" 
-                        variant="link" 
-                        className="text-danger p-0"
-                        onClick={() => removeFromCartHandler(item.id)}
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </Button>
-                  </Col>
-                </Row>
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        )}
-      </Col>
+    <>
+      <header className="sc-page-head">
+        <div className="sc-steps mb-3" aria-label="Checkout progress">
+          <span className="sc-step current"><span className="n">1</span> Cart</span>
+          <span className="sc-step-line"></span>
+          <span className="sc-step"><span className="n">2</span> Payment</span>
+          <span className="sc-step-line"></span>
+          <span className="sc-step"><span className="n">3</span> Confirmation</span>
+        </div>
+        <h1>Your shopping cart</h1>
+        <p>Review your selection and proceed to checkout.</p>
+      </header>
 
-      <Col md={4}>
-        <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
-          <Card.Header className="bg-primary text-white py-3 border-0">
-            <h5 className="mb-0 fw-bold">Summary</h5>
-          </Card.Header>
-          <ListGroup variant="flush">
-            <ListGroup.Item className="p-4">
-              <div className="d-flex justify-content-between mb-2 text-primary h4">
-                  <span>Total:</span>
-                  <span className="fw-bold">{cart.total} MAD</span>
-              </div>
-            </ListGroup.Item>
-            <ListGroup.Item className="p-4 border-0">
-              <Button 
-                type="button" 
-                className="btn-primary btn-lg w-100 py-3 rounded-pill shadow" 
-                disabled={!cart.items || cart.items.length === 0 || checkoutSuccess}
-                onClick={checkoutHandler}
-              >
-                {loading ? 'Processing...' : 'Pay Now'} <i className="fas fa-arrow-right ms-2"></i>
-              </Button>
-            </ListGroup.Item>
-          </ListGroup>
-        </Card>
-      </Col>
-    </Row>
+      <Row className="g-4 align-items-start">
+        <Col lg={8}>
+          {loading ? (
+            <div className="text-center py-5"><div className="sc-spinner" role="status"><span className="visually-hidden">Loading…</span></div></div>
+          ) : isEmpty ? (
+            <div className="sc-card sc-empty">
+              <div className="sc-empty-icon"><i className="fas fa-bag-shopping"></i></div>
+              <h3>Your cart is empty</h3>
+              <p className="text-muted mb-4">Discover our exceptional products and start your culinary journey.</p>
+              <Link to="/products" className="btn btn-primary btn-lg px-5">Start shopping</Link>
+            </div>
+          ) : (
+            <>
+              {cart.items.map((item) => {
+                const img = imageUrl(item.product_image)
+                return (
+                  <article key={item.id} className="sc-card sc-cart-item">
+                    <div className="sc-cart-thumb">{img ? <img src={img} alt={item.product_name} /> : <i className="fas fa-utensils"></i>}</div>
+                    <div className="sc-cart-info">
+                      <div className="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                          <h2 className="h6 mb-1"><Link className="sc-cart-name" to={`/products/${item.product}`}>{item.product_name}</Link></h2>
+                          <p className="text-muted small mb-0">{Number(item.product_price)} MAD / unit</p>
+                        </div>
+                        <span className="sc-price">{Number(item.product_price) * item.quantity}<small>MAD</small></span>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center mt-auto pt-3">
+                        <span className="text-muted small">Quantity: <strong className="text-dark">{item.quantity}</strong></span>
+                        <button type="button" className="sc-link-danger" onClick={() => removeFromCartHandler(item.id)}>
+                          <i className="fas fa-trash-can me-1"></i> Remove
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+              <Link to="/products" className="btn btn-soft mt-2"><i className="fas fa-arrow-left me-2"></i> Continue shopping</Link>
+            </>
+          )}
+        </Col>
+
+        <Col lg={4}>
+          <aside className="sc-card sc-summary">
+            <h4>Order summary</h4>
+            <div className="sc-summary-row"><span>Subtotal</span><strong>{Number(cart.total)} MAD</strong></div>
+            <div className="sc-summary-row"><span>Shipping</span><strong className="text-success">Free</strong></div>
+            <div className="sc-summary-total"><span>Total</span><strong>{Number(cart.total)} <small className="fs-6 text-muted">MAD</small></strong></div>
+            <button type="button" className="btn btn-primary btn-lg w-100 mt-4" disabled={isEmpty || loading} onClick={checkoutHandler}>
+              Checkout <i className="fas fa-arrow-right ms-2"></i>
+            </button>
+            {!isLoggedIn && !isEmpty && <p className="small text-muted text-center mt-3 mb-0"><i className="fas fa-user me-1"></i> You will be asked to log in or create an account to pay.</p>}
+            <p className="small text-muted text-center mt-3 mb-2"><i className="fas fa-lock me-1"></i> Secure checkout guaranteed</p>
+            <div className="d-flex justify-content-center"><PaymentLogos /></div>
+          </aside>
+          <div className="sc-promo mt-3"><i className="fas fa-truck-fast"></i> Free shipping on all orders over 5,000 MAD</div>
+        </Col>
+      </Row>
+
+      <Toast show={!!toast} onClose={closeToast} {...(toast || {})} />
+    </>
   )
 }
 

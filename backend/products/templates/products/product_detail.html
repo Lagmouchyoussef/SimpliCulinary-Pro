@@ -1,122 +1,88 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} - SimpliCulinary{% endblock %}
+{% block title %}{{ product.name }} — SimpliCulinary{% endblock %}
 
 {% block content %}
-<style>
-    .detail-card {
-        background: white;
-        border-radius: 2rem;
-        overflow: hidden;
-        border: none;
-    }
-    .product-image-large {
-        width: 100%;
-        height: 500px;
-        object-fit: cover;
-    }
-    .price-tag {
-        font-size: 2.5rem;
-        color: var(--bs-primary);
-        font-weight: 800;
-    }
-    .stock-badge {
-        font-size: 0.9rem;
-        padding: 0.5rem 1.5rem;
-        border-radius: 2rem;
-    }
-</style>
+<nav aria-label="breadcrumb" class="pt-4 pb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products_list' %}">Shop</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
+</nav>
 
-<div class="container py-5">
-    <nav aria-label="breadcrumb" class="mb-5">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'products_list' %}">Products</a></li>
-            <li class="breadcrumb-item active">{{ product.name }}</li>
-        </ol>
-    </nav>
-
-    <div class="card detail-card shadow-lg">
-        <div class="row g-0">
-            <div class="col-lg-6">
+<div class="sc-card sc-detail">
+    <div class="row g-0">
+        <div class="col-lg-6">
+            <div class="sc-detail-media">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" class="product-image-large" alt="{{ product.name }}">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
                 {% else %}
-                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
-                        <i class="fas fa-image fa-10x text-muted opacity-10"></i>
-                    </div>
+                    <div class="sc-product-placeholder" style="min-height:380px;font-size:6rem"><i class="fas fa-utensils"></i></div>
                 {% endif %}
             </div>
-            <div class="col-lg-6 p-5 d-flex flex-column">
-                <div class="mb-auto">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div>
-                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 mb-2">{{ product.category.name }}</span>
-                            <h1 class="fw-bold display-5">{{ product.name }}</h1>
+        </div>
+        <div class="col-lg-6 p-4 p-lg-5 d-flex flex-column">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="sc-chip sc-chip-soft">{{ product.category.name|default:"Premium" }}</span>
+                {% if product.stock > 0 %}
+                    <span class="sc-stock in"><i class="fas fa-circle-check"></i> In stock{% if product.stock <= 5 %} — only {{ product.stock }} left{% endif %}</span>
+                {% else %}
+                    <span class="sc-stock out"><i class="fas fa-circle-xmark"></i> Out of stock</span>
+                {% endif %}
+            </div>
+
+            <h1 class="sc-detail-title">{{ product.name }}</h1>
+            <div class="sc-detail-price mb-3">{{ product.price|floatformat:"-2" }} <small>MAD</small></div>
+
+            <p class="text-muted fs-6 lh-lg mb-4">
+                {{ product.description|default:"This premium culinary tool is designed for precision and durability — a must-have for any modern kitchen aiming for professional results." }}
+            </p>
+
+            <div class="sc-buybox mt-auto">
+                <form method="post" action="{% url 'add_cart' product.id %}" class="d-flex flex-wrap align-items-end gap-3">
+                    {% csrf_token %}
+                    <div>
+                        <label class="form-label" for="quantity">Quantity</label>
+                        <div class="sc-qty">
+                            <button class="sc-qty-btn" type="button" aria-label="Decrease quantity" onclick="this.parentNode.querySelector('input').stepDown()"><i class="fas fa-minus"></i></button>
+                            <input id="quantity" type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" aria-label="Quantity">
+                            <button class="sc-qty-btn" type="button" aria-label="Increase quantity" onclick="this.parentNode.querySelector('input').stepUp()"><i class="fas fa-plus"></i></button>
                         </div>
-                        <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if product.stock > 0 %}text-success{% else %}text-danger{% endif %} stock-badge">
-                            <i class="fas {% if product.stock > 0 %}fa-check-circle{% else %}fa-times-circle{% endif %} me-2"></i>
-                            {% if product.stock > 0 %}In Stock ({{ product.stock }}){% else %}Out of Stock{% endif %}
-                        </span>
                     </div>
-
-                    <div class="price-tag mb-4">
-                        {{ product.price }} <span class="h3 text-muted fw-normal">MAD</span>
+                    <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                        <button type="submit" class="btn btn-outline-primary btn-lg flex-grow-1" {% if product.stock <= 0 %}disabled{% endif %}>
+                            <i class="fas fa-bag-shopping me-2"></i> Add to cart
+                        </button>
+                        <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-lg flex-grow-1" {% if product.stock <= 0 %}disabled{% endif %}>
+                            Buy now <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
                     </div>
-
-                    <p class="text-muted lead mb-5">
-                        {{ product.description|default:"This premium culinary tool is designed for precision and durability. A must-have for any modern kitchen looking to achieve professional results." }}
-                    </p>
-                </div>
-
-                <div class="bg-light p-4 rounded-4">
-                    <form method="post" action="{% url 'add_cart' product.id %}" class="row g-3 align-items-center">
-                        {% csrf_token %}
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Quantity</label>
-                            <div class="input-group">
-                                <button class="btn btn-outline-secondary rounded-start-pill" type="button" onclick="this.parentNode.querySelector('input').stepDown()">-</button>
-                                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control text-center border-secondary">
-                                <button class="btn btn-outline-secondary rounded-end-pill" type="button" onclick="this.parentNode.querySelector('input').stepUp()">+</button>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label d-none d-md-block">&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm py-3 fw-bold" {% if product.stock <= 0 %}disabled{% endif %}>
-                                <i class="fas fa-cart-plus me-2"></i> Add to Cart
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Features Section -->
-<div class="container py-5 mt-4">
-    <div class="row g-4 text-center">
-        <div class="col-md-4">
-            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
-                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
-                <h5 class="fw-bold">Official Warranty</h5>
-                <p class="text-muted small mb-0">1-year manufacturer warranty included with every purchase.</p>
-            </div>
+<!-- Trust signals -->
+<div class="row g-4 mt-2 pb-2">
+    <div class="col-md-4">
+        <div class="sc-card sc-trust h-100">
+            <i class="fas fa-shield-halved"></i>
+            <div><h5>Official warranty</h5><p>1-year manufacturer warranty included with every purchase.</p></div>
         </div>
-        <div class="col-md-4">
-            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
-                <i class="fas fa-undo fa-3x text-success mb-3"></i>
-                <h5 class="fw-bold">Free Returns</h5>
-                <p class="text-muted small mb-0">Not satisfied? Return your item within 30 days for a full refund.</p>
-            </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sc-card sc-trust h-100">
+            <i class="fas fa-rotate-left"></i>
+            <div><h5>Free returns</h5><p>Not satisfied? Return your item within 30 days for a full refund.</p></div>
         </div>
-        <div class="col-md-4">
-            <div class="p-4 bg-white rounded-4 shadow-sm h-100">
-                <i class="fas fa-lock fa-3x text-info mb-3"></i>
-                <h5 class="fw-bold">Secure Payment</h5>
-                <p class="text-muted small mb-0">Your transactions are protected by industry-leading encryption.</p>
-            </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sc-card sc-trust h-100">
+            <i class="fas fa-lock"></i>
+            <div><h5>Secure payment</h5><p>Your transactions are protected by industry-leading encryption.</p></div>
         </div>
     </div>
 </div>

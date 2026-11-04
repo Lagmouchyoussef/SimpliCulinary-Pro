@@ -1,110 +1,68 @@
 import React, { useState } from 'react'
-import { Form, Button, Row, Col, Container, Card, Alert } from 'react-bootstrap'
-import { Link, useNavigate } from 'react-router-dom'
+import { Row, Col } from 'react-bootstrap'
+import { Link, useLocation } from 'react-router-dom'
 import axios from 'axios'
+import { API_URL } from '../config'
 
 function LoginScreen() {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const redirect = new URLSearchParams(useLocation().search).get('redirect') || '/products'
 
-    const navigate = useNavigate()
-
-    const submitHandler = async (e) => {
-        e.preventDefault()
-        setLoading(true)
-        setError('')
-
-        try {
-            const { data } = await axios.post('http://127.0.0.1:8001/users/api/login/', {
-                username,
-                password
-            })
-            
-            // Stocker les infos user (optionnel: localStorage)
-            localStorage.setItem('userInfo', JSON.stringify(data))
-            
-            // Redirect to home page or products
-            navigate('/products')
-            window.location.reload() // To update the header
-        } catch (err) {
-            setError(err.response && err.response.data.error ? err.response.data.error : 'An error occurred')
-        } finally {
-            setLoading(false)
-        }
+  const submitHandler = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const { data } = await axios.post(`${API_URL}/users/api/login/`, { username, password })
+      localStorage.setItem('userInfo', JSON.stringify(data))
+      window.location.assign(redirect) // full reload: refreshes header + cart counter
+    } catch (err) {
+      setError(err.response && err.response.data.error ? err.response.data.error : 'An error occurred')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    return (
-        <Container className="py-5">
-            <Row className="justify-content-md-center">
-                <Col xs={12} md={6}>
-                    <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
-                        <div className="bg-primary py-4 text-center text-white">
-                            <i className="fas fa-user-circle fa-4x mb-2"></i>
-                            <h2 className="fw-bold">Login</h2>
-                            <p className="mb-0 opacity-75">Welcome back!</p>
-                        </div>
-                        <Card.Body className="p-4 p-md-5">
-                            {error && <Alert variant="danger" className="rounded-3">{error}</Alert>}
-                            
-                            <Form onSubmit={submitHandler}>
-                                <Form.Group className="mb-4" controlId="username">
-                                    <Form.Label className="text-muted small fw-bold text-uppercase">Username</Form.Label>
-                                    <div className="input-group">
-                                        <span className="input-group-text bg-light border-0"><i className="fas fa-user text-primary"></i></span>
-                                        <Form.Control
-                                            type="text"
-                                            placeholder="Enter your username"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            className="bg-light border-0 py-2"
-                                            required
-                                        />
-                                    </div>
-                                </Form.Group>
-
-                                <Form.Group className="mb-4" controlId="password">
-                                    <Form.Label className="text-muted small fw-bold text-uppercase">Password</Form.Label>
-                                    <div className="input-group">
-                                        <span className="input-group-text bg-light border-0"><i className="fas fa-lock text-primary"></i></span>
-                                        <Form.Control
-                                            type="password"
-                                            placeholder="Enter your password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="bg-light border-0 py-2"
-                                            required
-                                        />
-                                    </div>
-                                </Form.Group>
-
-                                <Button 
-                                    type="submit" 
-                                    variant="primary" 
-                                    className="w-100 py-3 rounded-pill shadow fw-bold mt-2"
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Logging in...</>
-                                    ) : 'Login'}
-                                </Button>
-                            </Form>
-
-                            <Row className="py-3 mt-4 text-center border-top">
-                                <Col>
-                                    <span className="text-muted">New customer? </span>
-                                    <Link to="/signup" className="text-primary fw-bold text-decoration-none">
-                                        Create an account
-                                    </Link>
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
-    )
+  return (
+    <Row className="justify-content-center py-5">
+      <Col xs={12}>
+        <div className="sc-auth">
+          <Row className="g-0">
+            <Col xs={12}>
+              <div className="sc-auth-form">
+                <h1>Log in</h1>
+                <p className="text-muted mb-4">Enter your credentials to access your account.</p>
+                {error && <div className="alert alert-danger" role="alert"><i className="fas fa-circle-exclamation me-2"></i>{error}</div>}
+                <form onSubmit={submitHandler}>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="username">Username</label>
+                    <div className="sc-input-icon">
+                      <i className="fas fa-user"></i>
+                      <input id="username" className="form-control" type="text" placeholder="Enter your username" value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="username" />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="form-label" htmlFor="password">Password</label>
+                    <div className="sc-input-icon">
+                      <i className="fas fa-lock"></i>
+                      <input id="password" className="form-control" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn btn-primary btn-lg w-100" disabled={loading}>
+                    {loading ? <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Logging in…</> : 'Log in'}
+                  </button>
+                </form>
+                <p className="mt-4 mb-0 text-center text-muted">New to SimpliCulinary? <Link to={`/signup?redirect=${encodeURIComponent(redirect)}`} className="fw-bold">Create an account</Link></p>
+              </div>
+            </Col>
+          </Row>
+        </div>
+      </Col>
+    </Row>
+  )
 }
 
 export default LoginScreen

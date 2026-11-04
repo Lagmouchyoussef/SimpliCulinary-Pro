@@ -1,196 +1,86 @@
 import React, { useState } from 'react'
-import { Form, Button, Row, Col, Container, Card, Alert } from 'react-bootstrap'
-import { Link, useNavigate } from 'react-router-dom'
+import { Row, Col } from 'react-bootstrap'
+import { Link, useLocation } from 'react-router-dom'
 import axios from 'axios'
+import { API_URL } from '../config'
+
+const FIELDS = {
+  first_name: { label: 'First name', placeholder: 'Jane', half: true },
+  last_name: { label: 'Last name', placeholder: 'Doe', half: true },
+  username: { label: 'Username *', placeholder: 'Choose a username', required: true },
+  email: { label: 'Email *', placeholder: 'you@example.com', type: 'email', required: true },
+  password: { label: 'Password *', placeholder: '••••••••', type: 'password', required: true, half: true },
+  confirmPassword: { label: 'Confirm password *', placeholder: '••••••••', type: 'password', required: true, half: true },
+  phone: { label: 'Phone number', placeholder: '+212 6 00 00 00 00' },
+  address: { label: 'Address', placeholder: 'Street, city, postal code', textarea: true },
+}
 
 function SignupScreen() {
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        first_name: '',
-        last_name: '',
-        phone: '',
-        address: ''
-    })
-    
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    username: '', email: '', password: '', confirmPassword: '',
+    first_name: '', last_name: '', phone: '', address: '',
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const redirect = new URLSearchParams(useLocation().search).get('redirect') || '/products'
 
-    const navigate = useNavigate()
+  const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
-    const { username, email, password, confirmPassword, first_name, last_name, phone, address } = formData
-
-    const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
-
-    const submitHandler = async (e) => {
-        e.preventDefault()
-        
-        if (password !== confirmPassword) {
-            setError('Passwords do not match')
-            return
-        }
-
-        setLoading(true)
-        setError('')
-
-        try {
-            const { data } = await axios.post('http://127.0.0.1:8001/users/api/signup/', {
-                username, email, password, first_name, last_name, phone, address
-            })
-            
-            localStorage.setItem('userInfo', JSON.stringify(data))
-            navigate('/products')
-            window.location.reload()
-        } catch (err) {
-            setError(err.response && err.response.data.error ? err.response.data.error : 'An error occurred')
-        } finally {
-            setLoading(false)
-        }
+  const submitHandler = async (e) => {
+    e.preventDefault()
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
     }
+    setLoading(true)
+    setError('')
+    try {
+      const { confirmPassword, ...payload } = formData
+      const { data } = await axios.post(`${API_URL}/users/api/signup/`, payload)
+      localStorage.setItem('userInfo', JSON.stringify(data))
+      window.location.assign(redirect)
+    } catch (err) {
+      setError(err.response && err.response.data.error ? err.response.data.error : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
+  const renderField = (name) => {
+    const f = FIELDS[name]
+    const common = { id: name, name, className: 'form-control', placeholder: f.placeholder, value: formData[name], onChange, required: f.required }
     return (
-        <Container className="py-5">
-            <Row className="justify-content-md-center">
-                <Col xs={12} md={8} lg={6}>
-                    <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
-                        <div className="bg-primary py-4 text-center text-white">
-                            <i className="fas fa-user-plus fa-4x mb-2"></i>
-                            <h2 className="fw-bold">Create an account</h2>
-                            <p className="mb-0 opacity-75">Join the culinary adventure!</p>
-                        </div>
-                        <Card.Body className="p-4 p-md-5">
-                            {error && <Alert variant="danger" className="rounded-3">{error}</Alert>}
-                            
-                            <Form onSubmit={submitHandler}>
-                                <Row>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3" controlId="first_name">
-                                            <Form.Label className="text-muted small fw-bold">First Name</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                name="first_name"
-                                                value={first_name}
-                                                onChange={onChange}
-                                                className="bg-light border-0"
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3" controlId="last_name">
-                                            <Form.Label className="text-muted small fw-bold">Last Name</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                name="last_name"
-                                                value={last_name}
-                                                onChange={onChange}
-                                                className="bg-light border-0"
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-
-                                <Form.Group className="mb-3" controlId="username">
-                                    <Form.Label className="text-muted small fw-bold">Username *</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="username"
-                                        value={username}
-                                        onChange={onChange}
-                                        className="bg-light border-0"
-                                        required
-                                    />
-                                </Form.Group>
-
-                                <Form.Group className="mb-3" controlId="email">
-                                    <Form.Label className="text-muted small fw-bold">Email *</Form.Label>
-                                    <Form.Control
-                                        type="email"
-                                        name="email"
-                                        value={email}
-                                        onChange={onChange}
-                                        className="bg-light border-0"
-                                        required
-                                    />
-                                </Form.Group>
-
-                                <Row>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3" controlId="password">
-                                            <Form.Label className="text-muted small fw-bold">Password *</Form.Label>
-                                            <Form.Control
-                                                type="password"
-                                                name="password"
-                                                value={password}
-                                                onChange={onChange}
-                                                className="bg-light border-0"
-                                                required
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3" controlId="confirmPassword">
-                                            <Form.Label className="text-muted small fw-bold">Confirm *</Form.Label>
-                                            <Form.Control
-                                                type="password"
-                                                name="confirmPassword"
-                                                value={confirmPassword}
-                                                onChange={onChange}
-                                                className="bg-light border-0"
-                                                required
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
-
-                                <Form.Group className="mb-3" controlId="phone">
-                                    <Form.Label className="text-muted small fw-bold">Phone</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="phone"
-                                        value={phone}
-                                        onChange={onChange}
-                                        className="bg-light border-0"
-                                    />
-                                </Form.Group>
-
-                                <Form.Group className="mb-4" controlId="address">
-                                    <Form.Label className="text-muted small fw-bold">Address</Form.Label>
-                                    <Form.Control
-                                        as="textarea"
-                                        rows={2}
-                                        name="address"
-                                        value={address}
-                                        onChange={onChange}
-                                        className="bg-light border-0"
-                                    />
-                                </Form.Group>
-
-                                <Button 
-                                    type="submit" 
-                                    variant="primary" 
-                                    className="w-100 py-3 rounded-pill shadow fw-bold mt-2"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Creating...' : "Register"}
-                                </Button>
-                            </Form>
-
-                            <Row className="py-3 mt-4 text-center border-top">
-                                <Col>
-                                    <span className="text-muted">Already have an account? </span>
-                                    <Link to="/login" className="text-primary fw-bold text-decoration-none">
-                                        Login
-                                    </Link>
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+      <Col md={f.half ? 6 : 12} key={name} className="mb-3">
+        <label className="form-label" htmlFor={name}>{f.label}</label>
+        {f.textarea ? <textarea rows={3} {...common} /> : <input type={f.type || 'text'} {...common} />}
+      </Col>
     )
+  }
+
+  return (
+    <Row className="justify-content-center py-5">
+      <Col xs={12}>
+        <div className="sc-auth">
+          <Row className="g-0">
+            <Col xs={12}>
+              <div className="sc-auth-form">
+                <h1>Create your account</h1>
+                <p className="text-muted mb-4">It only takes a minute.</p>
+                {error && <div className="alert alert-danger" role="alert"><i className="fas fa-circle-exclamation me-2"></i>{error}</div>}
+                <form onSubmit={submitHandler}>
+                  <Row>{Object.keys(FIELDS).map(renderField)}</Row>
+                  <button type="submit" className="btn btn-primary btn-lg w-100 mt-2" disabled={loading}>
+                    {loading ? 'Creating account…' : 'Create account'}
+                  </button>
+                </form>
+                <p className="mt-4 mb-0 text-center text-muted">Already have an account? <Link to={`/login?redirect=${encodeURIComponent(redirect)}`} className="fw-bold">Log in</Link></p>
+              </div>
+            </Col>
+          </Row>
+        </div>
+      </Col>
+    </Row>
+  )
 }
 
 export default SignupScreen

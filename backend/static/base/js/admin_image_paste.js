@@ -6,15 +6,15 @@ document.addEventListener('paste', function (e) {
             const fileInput = document.querySelector('input[type="file"]');
             
             if (fileInput) {
-                // Créer un conteneur DataTransfer pour simuler un dépôt de fichier
+                // Build a DataTransfer container to simulate a file drop
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(blob);
                 fileInput.files = dataTransfer.files;
                 
-                // Optionnel : Afficher un message de succès
-                alert('Image collée avec succès !');
+                // Optional: confirm the paste to the admin
+                alert('Image pasted successfully!');
                 
-                // Forcer le rafraîchissement visuel si nécessaire
+                // Trigger a change event so the admin widget refreshes
                 fileInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }

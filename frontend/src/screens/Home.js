@@ -1,134 +1,115 @@
-import React from 'react'
-import { Container, Row, Col, Button, Card } from 'react-bootstrap'
-import { LinkContainer } from 'react-router-bootstrap'
+import React, { useState, useEffect } from 'react'
+import { Row, Col } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
+import Product from '../components/Product'
+import Toast from '../components/Toast'
+import { API_URL } from '../config'
+
+const FEATURES = [
+  { icon: 'fa-award', title: 'Premium quality', text: 'Only the best brands and materials, selected for performance and long-term durability.' },
+  { icon: 'fa-truck-fast', title: 'Fast, tracked delivery', text: 'Secure shipping within 48 hours nationwide, with live tracking on every order.' },
+  { icon: 'fa-headset', title: 'Expert support', text: 'Our culinary specialists are on hand around the clock to help you choose and cook.' },
+]
 
 function Home() {
-  const [email, setEmail] = React.useState('');
-  const [subscribed, setSubscribed] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState(null)
+  const [featured, setFeatured] = useState([])
+
+  useEffect(() => {
+    axios.get(`${API_URL}/products/api/`)
+      .then(({ data }) => setFeatured(data.slice(0, 3)))
+      .catch((error) => console.error('Error fetching products', error))
+  }, [])
 
   const handleSubscribe = async (e) => {
-    e.preventDefault();
-    if (email) {
-      setLoading(true);
-      try {
-        await axios.post('http://127.0.0.1:8001/api/newsletter/', { email });
-        setSubscribed(true);
-        setEmail('');
-      } catch (error) {
-        console.error("Subscription error", error);
-        alert("An error occurred while sending the email.");
-      } finally {
-        setLoading(false);
-      }
+    e.preventDefault()
+    if (!email) return
+    setLoading(true)
+    try {
+      await axios.post(`${API_URL}/api/newsletter/`, { email })
+      setToast({ type: 'success', title: 'Subscribed', message: 'Thank you! You are now subscribed.' })
+      setEmail('')
+    } catch (error) {
+      console.error('Subscription error', error)
+      setToast({ type: 'error', title: 'Something went wrong', message: 'Subscription failed. Please try again.' })
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
-      <section className="hero-section shadow-lg" style={{ background: 'linear-gradient(135deg, #0061f2 0%, #00cfd5 100%)' }}>
-        <Container>
-          <Row className="align-items-center">
-            <Col lg={7} className="hero-content">
-              <h1 className="display-3 fw-bold mb-3 text-white">
-                Culinary Excellence
-              </h1>
-              <p className="lead mb-5 text-white opacity-75">
-                Discover an exclusive selection of high-precision equipment to transform your kitchen into a true chef's workshop.
-              </p>
-              <div className="d-flex gap-3">
-                <LinkContainer to="/products">
-                  <Button variant="light" className="btn-premium py-3 px-5 shadow fw-bold">
-                    Explore the collection
-                  </Button>
-                </LinkContainer>
-                <LinkContainer to="/signup">
-                  <Button variant="outline-light" className="btn-premium py-3 px-5 fw-bold">
-                    Join
-                  </Button>
-                </LinkContainer>
+    <div>
+      {/* Hero */}
+      <section className="sc-hero">
+        <div className="sc-hero-inner">
+          <Row className="align-items-center g-5">
+            <Col lg={8}>
+              <span className="sc-eyebrow">Professional kitchen equipment</span>
+              <h1>Cook with <em>precision.</em><br />Serve with pride.</h1>
+              <p className="lead">Precision cookers, vacuum sealers and chef-grade tools — curated to turn your home kitchen into a true culinary workshop.</p>
+              <div className="d-flex flex-wrap gap-3 mt-4">
+                <Link to="/products" className="btn btn-accent btn-lg">Shop the collection <i className="fas fa-arrow-right ms-2"></i></Link>
+                <Link to="/signup" className="btn btn-outline-light btn-ghost-light btn-lg">Create account</Link>
               </div>
             </Col>
-            <Col lg={5} className="d-none d-lg-block">
-                {/* Decorative image or empty space if the image is in the background */}
-            </Col>
           </Row>
-        </Container>
+        </div>
       </section>
 
-      {/* Featured Categories */}
-      <Container className="py-5">
-        <h2 className="text-center fw-bold mb-5">Why choose <span className="text-primary">E-Vente</span>?</h2>
+      {/* Why us */}
+      <section className="sc-section">
+        <div className="sc-section-head">
+          <span className="sc-eyebrow">Why SimpliCulinary</span>
+          <h2>Built for people who love to cook</h2>
+          <p>Every product is tested, certified and backed by a team that actually cooks with it.</p>
+        </div>
         <Row className="g-4">
-          <Col md={4}>
-            <Card className="card-premium h-100 text-center p-4">
-              <Card.Body>
-                <div className="bg-primary bg-opacity-10 rounded-circle p-4 d-inline-block mb-4">
-                  <i className="fas fa-gem fa-2x text-primary"></i>
-                </div>
-                <h4 className="fw-bold mb-3">Premium Quality</h4>
-                <p className="text-muted">Products selected from the world's best brands.</p>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="card-premium h-100 text-center p-4">
-              <Card.Body>
-                <div className="bg-success bg-opacity-10 rounded-circle p-4 d-inline-block mb-4">
-                  <i className="fas fa-shipping-fast fa-2x text-success"></i>
-                </div>
-                <h4 className="fw-bold mb-3">Fast Delivery</h4>
-                <p className="text-muted">Secure shipping within 48 hours nationwide.</p>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="card-premium h-100 text-center p-4">
-              <Card.Body>
-                <div className="bg-warning bg-opacity-10 rounded-circle p-4 d-inline-block mb-4">
-                  <i className="fas fa-headset fa-2x text-warning"></i>
-                </div>
-                <h4 className="fw-bold mb-3">24/7 Support</h4>
-                <p className="text-muted">A team of experts at your service to advise you.</p>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-
-      {/* Newsletter Section */}
-      <section className="bg-dark text-white py-5 rounded-5 mt-5 overflow-hidden position-relative">
-        <Container className="text-center py-4 position-relative" style={{ zIndex: 1 }}>
-          <h2 className="fw-bold mb-3">Subscribe to our Newsletter</h2>
-          <p className="opacity-75 mb-4">Receive our latest offers and culinary tips directly in your mailbox.</p>
-          
-          <Row className="justify-content-center">
-            <Col md={6}>
-              {subscribed ? (
-                <div className="bg-success bg-opacity-25 border border-success border-opacity-50 text-success p-3 rounded-pill animate__animated animate__fadeIn">
-                  <i className="fas fa-check-circle me-2"></i> Thank you! You are now subscribed to our newsletter.
-                </div>
-              ) : (
-                <form onSubmit={handleSubscribe} className="d-flex gap-2">
-                  <input 
-                    type="email" 
-                    className="form-control form-control-lg rounded-pill border-0 px-4" 
-                    placeholder="Your email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                  />
-                  <Button type="submit" variant="primary" className="btn-premium px-5" disabled={loading}>
-                    {loading ? 'Sending...' : 'Subscribe'}
-                  </Button>
-                </form>
-              )}
+          {FEATURES.map((f) => (
+            <Col md={4} key={f.title}>
+              <div className="sc-card sc-feature">
+                <div className="sc-feature-icon"><i className={`fas ${f.icon}`}></i></div>
+                <h3>{f.title}</h3>
+                <p>{f.text}</p>
+              </div>
             </Col>
-          </Row>
-        </Container>
+          ))}
+        </Row>
       </section>
+
+      {/* Featured */}
+      {featured.length > 0 && (
+        <section className="sc-section pt-0">
+          <div className="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div>
+              <span className="sc-eyebrow">Featured</span>
+              <h2 className="mt-1 mb-1">Chef's picks</h2>
+              <p className="text-muted mb-0">The best tools for your next masterpiece.</p>
+            </div>
+            <Link to="/products" className="btn btn-outline-primary px-4">View all products <i className="fas fa-arrow-right ms-2"></i></Link>
+          </div>
+          <Row className="g-4">
+            {featured.map((p) => (
+              <Col md={6} lg={4} key={p.id}><Product product={p} /></Col>
+            ))}
+          </Row>
+        </section>
+      )}
+
+      {/* Newsletter */}
+      <section className="sc-newsletter">
+        <span className="sc-eyebrow">Newsletter</span>
+        <h2 className="mt-2">Recipes, tips &amp; early access</h2>
+        <p>Join our community of home chefs and get expert techniques and exclusive offers in your inbox.</p>
+        <form onSubmit={handleSubscribe}>
+          <input type="email" placeholder="Enter your email address" aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <button type="submit" className="btn btn-accent px-4" disabled={loading}>{loading ? 'Sending…' : 'Subscribe'}</button>
+        </form>
+      </section>
+
+      <Toast show={!!toast} onClose={() => setToast(null)} {...(toast || {})} />
     </div>
   )
 }

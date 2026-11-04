@@ -1,0 +1,24 @@
+<script>
+    async function addToCartAjax(productId) {
+        var tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        try {
+            var response = await fetch('/cart/add-ajax/' + productId + '/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': tokenInput ? tokenInput.value : '', 'Content-Type': 'application/json' }
+            });
+            var data = await response.json();
+            if (!response.ok || data.status !== 'success') {
+                showToast(data.message || 'We could not add this product. Please try again.', 'error');
+                return;
+            }
+            if (data.status === 'success') {
+                var counter = document.getElementById('cart-counter');
+                if (counter) counter.innerText = data.total_items;
+                showToast(data.message, 'success');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('We could not add this product. Please try again.', 'error');
+        }
+    }
+</script>

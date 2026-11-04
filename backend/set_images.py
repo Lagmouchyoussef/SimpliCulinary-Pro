@@ -26,16 +26,16 @@ def set_smart_images():
         # If no keyword found, use 'kitchen'
         search_term = keywords[0] if keywords else "kitchen"
         
-        # Basic translation or common English keywords for better results
+        # Map product keywords to search terms that return better stock photos
         translations = {
-            'mixeur': 'blender',
-            'poele': 'frying-pan',
-            'cuiseur': 'cooker',
-            'emballer': 'vacuum-sealer',
-            'recipient': 'container',
-            'couteau': 'knife',
-            'four': 'oven',
-            'grille': 'toaster'
+            'blender': 'blender',
+            'skillet': 'frying-pan',
+            'cooker': 'cooker',
+            'vacuum': 'vacuum-sealer',
+            'container': 'container',
+            'knife': 'knife',
+            'oven': 'oven',
+            'toaster': 'toaster'
         }
         
         final_term = translations.get(search_term, search_term)
@@ -47,7 +47,7 @@ def set_smart_images():
         try:
             response = requests.get(url, timeout=15)
             if response.status_code == 200:
-                # Supprimer l'ancienne image si elle existe
+                # Remove the previous image if it exists
                 if p.image:
                     try:
                         os.remove(p.image.path)

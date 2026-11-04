@@ -1,66 +1,72 @@
 import React from 'react'
-import { Navbar, Container, Nav, Badge } from 'react-bootstrap'
+import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
 import { LinkContainer } from 'react-router-bootstrap'
+import axios from 'axios'
 import { useCart } from '../context/CartContext'
+import { API_URL } from '../config'
 
 function Header() {
   const { cartCount } = useCart();
   const userInfo = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null;
 
-  const logoutHandler = () => {
+  const logoutHandler = async () => {
+    try { await axios.post(`${API_URL}/users/api/logout/`) } catch (e) { console.error(e) }
     localStorage.removeItem('userInfo');
-    window.location.reload();
+    window.location.href = '/';
   };
 
   return (
     <header>
-      <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect className="shadow-sm">
+      <Navbar expand="lg" sticky="top" collapseOnSelect className="sc-nav" aria-label="Main navigation">
         <Container>
           <LinkContainer to="/">
-            <Navbar.Brand className="fw-bold">E-Vente</Navbar.Brand>
+            <Navbar.Brand as="a" className="sc-brand p-0" aria-label="SimpliCulinary — home">
+              <img src="/logo-mark.svg" alt="" width="42" height="42" />
+              <span>
+                <span className="sc-brand-text">Simpli<b>Culinary</b></span>
+              </span>
+            </Navbar.Brand>
           </LinkContainer>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <LinkContainer to="/">
+          <Navbar.Toggle aria-controls="main-navbar" className="border-0 shadow-none">
+            <i className="fas fa-bars-staggered fa-lg"></i>
+          </Navbar.Toggle>
+          <Navbar.Collapse id="main-navbar">
+            <Nav className="mx-lg-auto gap-lg-1">
+              <LinkContainer to="/" exact="true">
                 <Nav.Link>Home</Nav.Link>
               </LinkContainer>
               <LinkContainer to="/products">
-                <Nav.Link>Products</Nav.Link>
+                <Nav.Link>Shop</Nav.Link>
               </LinkContainer>
             </Nav>
-            <Nav className="ms-auto">
+            <Nav className="align-items-lg-center gap-2 mt-3 mt-lg-0">
               <LinkContainer to="/cart">
-                <Nav.Link className="position-relative">
-                  <i className="fas fa-shopping-cart me-1"></i> Cart
-                  {cartCount > 0 && (
-                    <Badge 
-                      pill 
-                      bg="danger" 
-                      className="position-absolute top-0 start-100 translate-middle"
-                      style={{ fontSize: '0.6rem' }}
-                    >
-                      {cartCount}
-                    </Badge>
-                  )}
+                <Nav.Link className="sc-cart-btn p-0" aria-label="Shopping cart">
+                  <i className="fas fa-bag-shopping"></i>
+                  <span className="sc-cart-count">{cartCount}</span>
                 </Nav.Link>
               </LinkContainer>
 
               {userInfo ? (
-                <>
-                  <Nav.Link className="text-white border-start ms-lg-3 ps-lg-3 d-none d-lg-block">
-                    <i className="fas fa-user-circle me-1"></i> {userInfo.username}
-                  </Nav.Link>
-                  <Nav.Link onClick={logoutHandler} className="text-warning fw-bold">
-                    <i className="fas fa-sign-out-alt"></i> Logout
-                  </Nav.Link>
-                </>
+                <NavDropdown
+                  align="end"
+                  id="user-menu"
+                  title={<span className="sc-user-chip"><span className="sc-avatar">{userInfo.username.charAt(0)}</span>{userInfo.username}</span>}
+                >
+                  <LinkContainer to="/cart">
+                    <NavDropdown.Item><i className="fas fa-bag-shopping me-2 text-muted"></i> My cart</NavDropdown.Item>
+                  </LinkContainer>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={logoutHandler} className="text-danger">
+                    <i className="fas fa-arrow-right-from-bracket me-2"></i> Log out
+                  </NavDropdown.Item>
+                </NavDropdown>
               ) : (
-                <LinkContainer to="/login">
-                  <Nav.Link>
-                    <i className="fas fa-user"></i> Login
-                  </Nav.Link>
-                </LinkContainer>
+                <>
+                  <Link to="/login" className="btn btn-outline-primary px-4">Log in</Link>
+                  <Link to="/signup" className="btn btn-primary px-4">Sign up</Link>
+                </>
               )}
             </Nav>
           </Navbar.Collapse>

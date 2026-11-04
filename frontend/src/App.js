@@ -9,6 +9,7 @@ import ProductScreen from './screens/ProductScreen'
 import CartScreen from './screens/CartScreen'
 import LoginScreen from './screens/LoginScreen'
 import SignupScreen from './screens/SignupScreen'
+import CheckoutScreen from './screens/CheckoutScreen'
 import { CartProvider } from './context/CartContext'
 
 function App() {
@@ -16,13 +17,14 @@ function App() {
     <CartProvider>
       <Router>
         <Header />
-        <main className="py-3">
+        <main className="sc-main">
           <Container>
             <Routes>
-              <Route path="/" element={<Home />} exact />
+              <Route path="/" element={<Home />} />
               <Route path="/products" element={<ListProduits />} />
               <Route path="/products/:id" element={<ProductScreen />} />
               <Route path="/cart" element={<CartScreen />} />
+              <Route path="/checkout" element={<CheckoutScreen />} />
               <Route path="/login" element={<LoginScreen />} />
               <Route path="/signup" element={<SignupScreen />} />
             </Routes>

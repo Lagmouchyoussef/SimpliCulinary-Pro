@@ -1,18 +1,39 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Confirmation - SimpliCulinary{% endblock %}
+{% block title %}Order confirmed — SimpliCulinary{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="alert alert-success">
-        <h2>Thank you for your order, {{ order.user.username }}!</h2>
+<header class="sc-page-head text-center">
+    <div class="sc-steps justify-content-center mb-4" aria-label="Checkout progress">
+        <span class="sc-step done"><span class="n"><i class="fas fa-check" style="font-size:.6rem"></i></span> Cart</span>
+        <span class="sc-step-line"></span>
+        <span class="sc-step done"><span class="n"><i class="fas fa-check" style="font-size:.6rem"></i></span> Payment</span>
+        <span class="sc-step-line"></span>
+        <span class="sc-step current"><span class="n">3</span> Confirmation</span>
     </div>
-    <div class="card p-4 shadow-sm">
-        <p><strong>Order No:</strong> {{ order.id }} created on {{ order.created_at|date:"d/m/Y H:i" }}</p>
-        <p><strong>Total :</strong> {{ order.total }} MAD</p>
-        <p><strong>Shipping address:</strong><br>{{ order.shipping_address }}</p>
-        <div class="mt-4">
-            <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+</header>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="sc-card p-4 p-lg-5 text-center">
+            <div class="sc-success-mark"><i class="fas fa-check"></i></div>
+            <h1 class="sc-display h2 mb-2">Thank you for your order, {{ order.user.username }}!</h1>
+            <p class="text-muted mb-4">Your payment was successful and we are preparing your order for shipment.</p>
+
+            <dl class="sc-kv text-start bg-light rounded-4 p-4 mb-4" style="background:var(--sc-ivory)!important">
+                <dt>Order number</dt><dd>#{{ order.id }}</dd>
+                <dt>Placed on</dt><dd>{{ order.created_at|date:"F j, Y, g:i A" }}</dd>
+                <dt>Status</dt><dd><span class="sc-chip sc-chip-soft">{{ order.status }}</span></dd>
+                <dt>Total paid</dt><dd>{{ order.total|floatformat:"-2" }} MAD</dd>
+                <dt>Payment</dt><dd>{{ order.payment_details|default:order.payment_method }}</dd>
+                <dt>Reference</dt><dd>{{ order.payment_reference }}</dd>
+                <dt>Shipping address</dt><dd>{{ order.shipping_address|linebreaksbr }}</dd>
+            </dl>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="{% url 'products_list' %}" class="btn btn-primary px-4">Continue shopping</a>
+                <a href="{% url 'home' %}" class="btn btn-soft px-4">Back to home</a>
+            </div>
         </div>
     </div>
 </div>

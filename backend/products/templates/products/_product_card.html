@@ -1,0 +1,33 @@
+{% load static %}
+<article class="sc-product">
+    <div class="sc-product-media">
+        <span class="sc-chip">{{ product.category.name|default:"Premium" }}</span>
+        {% if product.stock <= 0 %}
+            <span class="sc-chip sc-chip-warn sc-chip-right">Sold out</span>
+        {% elif product.stock <= 5 %}
+            <span class="sc-chip sc-chip-warn sc-chip-right">Only {{ product.stock }} left</span>
+        {% endif %}
+        <a href="{% url 'product_detail' product.id %}" tabindex="-1" aria-hidden="true" style="display:block;height:100%">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+                <div class="sc-product-placeholder"><i class="fas fa-utensils"></i></div>
+            {% endif %}
+        </a>
+    </div>
+    <div class="sc-product-body">
+        <h3 class="sc-product-title"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+        <p class="sc-product-desc">{{ product.description|default:"Professional-grade equipment for confident home chefs."|truncatewords:18 }}</p>
+        <div class="sc-product-foot">
+            <div>
+                <span class="sc-price-label">Price</span>
+                <span class="sc-price">{{ product.price|floatformat:"-2" }}<small>MAD</small></span>
+            </div>
+            {% if product.stock > 0 %}
+            <button type="button" class="btn btn-primary btn-sm px-3" onclick="addToCartAjax({{ product.id }})" aria-label="Add {{ product.name }} to cart"><i class="fas fa-bag-shopping me-1"></i> Add</button>
+            {% else %}
+            <a href="{% url 'product_detail' product.id %}" class="btn btn-soft btn-sm px-3">Details</a>
+            {% endif %}
+        </div>
+    </div>
+</article>

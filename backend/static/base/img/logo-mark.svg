@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="SimpliCulinary logo mark">
+  <rect width="64" height="64" rx="14" fill="#0F3556"/>
+  <circle cx="32" cy="15.5" r="3" fill="#F2A33A"/>
+  <path d="M13 42a19 19 0 0 1 38 0z" fill="#FFFFFF"/>
+  <rect x="10" y="46" width="44" height="4.5" rx="2.25" fill="#F2A33A"/>
+</svg>

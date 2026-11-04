@@ -1,46 +1,137 @@
 {% extends 'base/base.html' %}
-{% load crispy_forms_tags %}
 
-{% block title %}Shipping - SimpliCulinary{% endblock %}
+{% block title %}Checkout — SimpliCulinary{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>ORDER SHIPPING</h1>
-    <div class="row">
-        <div class="col-md-8">
-            <form method="post">
-                {% csrf_token %}
-                {{ form|crispy }}
-                <button type="submit" class="btn btn-primary">Place Order</button>
-            </form>
+<header class="sc-page-head">
+    <div class="sc-steps mb-3" aria-label="Checkout progress">
+        <span class="sc-step done"><span class="n"><i class="fas fa-check" style="font-size:.6rem"></i></span> Cart</span>
+        <span class="sc-step-line"></span>
+        <span class="sc-step current"><span class="n">2</span> Payment</span>
+        <span class="sc-step-line"></span>
+        <span class="sc-step"><span class="n">3</span> Confirmation</span>
+    </div>
+    <h1>Checkout</h1>
+    <p>Enter your shipping address and choose how you want to pay.</p>
+</header>
+
+<form method="post" id="checkout-form" novalidate>
+{% csrf_token %}
+<div class="row g-4 align-items-start">
+    <div class="col-lg-7">
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+        <div class="sc-card p-4 mb-4">
+            <h2 class="h5 mb-3">1. Shipping address</h2>
+            <textarea name="shipping_address" rows="3" class="form-control {% if form.shipping_address.errors %}is-invalid{% endif %}" placeholder="Street, number, city, postal code, country" aria-label="Shipping address">{{ form.shipping_address.value|default:'' }}</textarea>
+            {% for e in form.shipping_address.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item">
-                        <h3>ORDER SUMMARY</h3>
+
+        <div class="sc-card p-4">
+            <h2 class="h5 mb-3">2. Payment method</h2>
+            {% for value, label in methods %}
+            <label class="sc-method {% if form.payment_method.value == value %}active{% endif %}" data-method="{{ value }}">
+                <span class="d-flex align-items-center gap-3">
+                    <input type="radio" name="payment_method" value="{{ value }}" {% if form.payment_method.value == value %}checked{% endif %}>
+                    <span class="sc-method-title">{{ label }}</span>
+                </span>
+                <span class="sc-pay-logos sm">
+                    {% if value == 'card' %}<i class="fab fa-cc-visa"></i><i class="fab fa-cc-mastercard"></i><i class="fab fa-cc-amex"></i>
+                    {% elif value == 'paypal' %}<i class="fab fa-cc-paypal"></i>
+                    {% elif value == 'google_pay' %}<i class="fab fa-google-pay"></i>
+                    {% elif value == 'apple_pay' %}<i class="fab fa-cc-apple-pay"></i>
+                    {% else %}<i class="fab fa-bitcoin"></i><i class="fab fa-ethereum"></i>{% endif %}
+                </span>
+            </label>
+
+            {% if value == 'card' %}
+            <div class="sc-method-panel" data-panel="card">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="card_name">Name on card</label>
+                        <input id="card_name" name="card_name" class="form-control {% if form.card_name.errors %}is-invalid{% endif %}" value="{{ form.card_name.value|default:'' }}" autocomplete="cc-name">
+                        {% for e in form.card_name.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
                     </div>
-                    <div class="list-group-item">
-                        <div class="row">
-                            <div class="col">Subtotal - products:</div>
-                            <div class="col"><strong>{{ cart.total }} MAD</strong></div>
-                        </div>
+                    <div class="col-12">
+                        <label class="form-label" for="card_number">Card number</label>
+                        <input id="card_number" name="card_number" inputmode="numeric" placeholder="1234 5678 9012 3456" class="form-control {% if form.card_number.errors %}is-invalid{% endif %}" autocomplete="cc-number">
+                        {% for e in form.card_number.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
                     </div>
-                    <div class="list-group-item">
-                        <div class="row">
-                            <div class="col">Shipping:</div>
-                            <div class="col"><strong>FREE</strong></div>
-                        </div>
+                    <div class="col-6">
+                        <label class="form-label" for="card_expiry">Expiry (MM/YY)</label>
+                        <input id="card_expiry" name="card_expiry" placeholder="MM/YY" class="form-control {% if form.card_expiry.errors %}is-invalid{% endif %}" autocomplete="cc-exp">
+                        {% for e in form.card_expiry.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
                     </div>
-                    <div class="list-group-item">
-                        <div class="row">
-                            <div class="col"><h3>TOTAL:</h3></div>
-                            <div class="col"><h3>{{ cart.total }} MAD</h3></div>
-                        </div>
+                    <div class="col-6">
+                        <label class="form-label" for="card_cvc">CVC</label>
+                        <input id="card_cvc" name="card_cvc" inputmode="numeric" maxlength="4" placeholder="123" class="form-control {% if form.card_cvc.errors %}is-invalid{% endif %}" autocomplete="cc-csc">
+                        {% for e in form.card_cvc.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
                     </div>
                 </div>
+                <p class="small text-muted mt-3 mb-0"><i class="fas fa-lock me-1"></i> Card details are never stored. Test card: 4242 4242 4242 4242, any future date, any CVC.</p>
             </div>
+            {% elif value == 'crypto' %}
+            <div class="sc-method-panel" data-panel="crypto">
+                <label class="form-label" for="crypto_coin">Choose a coin</label>
+                <select id="crypto_coin" name="crypto_coin" class="form-select">
+                    {% for code, name in coins %}<option value="{{ code }}" {% if form.crypto_coin.value == code %}selected{% endif %}>{{ name }}</option>{% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <div class="sc-method-panel" data-panel="{{ value }}">
+                <p class="small text-muted mb-0">You will confirm the payment with {{ label }} when you place the order.</p>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% for e in form.payment_method.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
         </div>
     </div>
+
+    <div class="col-lg-5">
+        <aside class="sc-card sc-summary">
+            <h4>Order summary</h4>
+            {% for item in cart.items.all %}
+            <div class="d-flex justify-content-between gap-3 py-2 small">
+                <span class="text-muted">{{ item.quantity }} × {{ item.product.name }}</span>
+                <strong>{{ item.total_price|floatformat:"-2" }} MAD</strong>
+            </div>
+            {% endfor %}
+            <div class="sc-summary-row mt-2"><span>Subtotal</span><strong>{{ cart.total|floatformat:"-2" }} MAD</strong></div>
+            <div class="sc-summary-row"><span>Shipping</span><strong class="text-success">Free</strong></div>
+            <div class="sc-summary-total"><span>Total</span><strong>{{ cart.total|floatformat:"-2" }} <small class="fs-6 text-muted">MAD</small></strong></div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4"><i class="fas fa-lock me-2"></i> Pay {{ cart.total|floatformat:"-2" }} MAD</button>
+            <div class="sc-demo-note mt-3"><i class="fas fa-flask mt-1"></i><span>Demo mode: no real payment is processed and no money is charged.</span></div>
+            <div class="d-flex justify-content-center mt-3">{% include 'base/_payment_logos.html' %}</div>
+        </aside>
+    </div>
 </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var methods = document.querySelectorAll('.sc-method');
+        var panels = document.querySelectorAll('.sc-method-panel');
+        function refresh() {
+            var checked = document.querySelector('input[name=payment_method]:checked');
+            var current = checked ? checked.value : 'card';
+            methods.forEach(function (m) { m.classList.toggle('active', m.dataset.method === current); });
+            panels.forEach(function (p) { p.style.display = p.dataset.panel === current ? '' : 'none'; });
+        }
+        document.querySelectorAll('input[name=payment_method]').forEach(function (r) { r.addEventListener('change', refresh); });
+        refresh();
+
+        var number = document.getElementById('card_number');
+        if (number) number.addEventListener('input', function () {
+            var d = number.value.replace(/\D/g, '').slice(0, 19);
+            number.value = d.replace(/(.{4})/g, '$1 ').trim();
+        });
+        var expiry = document.getElementById('card_expiry');
+        if (expiry) expiry.addEventListener('input', function () {
+            var d = expiry.value.replace(/\D/g, '').slice(0, 4);
+            expiry.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+        });
+    })();
+</script>
 {% endblock %}
