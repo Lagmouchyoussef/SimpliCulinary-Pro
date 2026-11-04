@@ -247,7 +247,7 @@ SimpliCulinary-Pro/
 ├── docs/
 │   ├── screenshots/        # images used in this README
 │   └── brand/              # logo files
-└── linkedin/               # ready-to-share visuals and post text
+└── linkedin/               # post text
 ```
 
 ---
